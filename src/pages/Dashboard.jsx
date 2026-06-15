@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
+
 import Sidebar from '../components/Sidebar'
 
 export default function Dashboard() {
@@ -57,7 +58,7 @@ export default function Dashboard() {
     setTimeout(() => {
       fetchData()
     }, 0)
-  }, [user])
+  }, [user, fetchData])
 
 
 

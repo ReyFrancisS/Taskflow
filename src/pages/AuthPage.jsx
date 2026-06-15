@@ -98,7 +98,12 @@ export default function AuthPage() {
     })
     setLoading(false)
     if (error) return setError(error.message)
-    setSuccess('Account created! Please check your email to confirm.')
+    setSuccess('Account created successfully! You can now login.')
+    // Clear form and redirect to login after 1.5 seconds
+    setTimeout(() => {
+      setRegisterForm({ name: '', email: '', password: '', confirm: '' })
+      animateWave('login')
+    }, 1500)
   }
 
   const isRegister = mode === 'register'
