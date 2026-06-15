@@ -4,10 +4,16 @@ import { useNavigate } from 'react-router-dom'
 
 export default function AuthPage() {
   const [mode, setMode] = useState('login')
-  const [animating, setAnimating] = useState(false)
-  const [waveD, setWaveD] = useState('M60,0 Q20,115 50,230 Q80,345 60,460 L420,460 L420,0 Z')
+  const [waveAnimating, setWaveAnimating] = useState(false)
   const rafRef = useRef(null)
+
+  const waveDRef = useRef('M60,0 Q20,115 50,230 Q80,345 60,460 L420,460 L420,0 Z')
+  const [waveD, setWaveD] = useState(waveDRef.current)
+
+  const targetModeRef = useRef('login')
+  const fromModeRef = useRef('login')
   const navigate = useNavigate()
+
 
   const [loginForm, setLoginForm] = useState({ email: '', password: '', remember: false })
   const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '', confirm: '' })
@@ -25,28 +31,44 @@ export default function AuthPage() {
   function ease(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2 }
 
   function animateWave(toMode) {
-    if (animating) return
-    setAnimating(true)
-    setError('')
-    const fromNums = parsePath(waveD)
+    if (waveAnimating) {
+      // stop previous to keep the curve continuous
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
+    }
+
+    targetModeRef.current = toMode
+
+    const fromNums = parsePath(waveDRef.current)
     const toNums = toMode === 'register' ? REG_WAVE : LOGIN_WAVE
-    const duration = 1100
+    const duration = 900
+
+    setWaveAnimating(true)
+
     let start = null
     function step(ts) {
       if (!start) start = ts
       const progress = Math.min((ts - start) / duration, 1)
       const eased = ease(progress)
       const nums = fromNums.map((v, i) => v + (toNums[i] - v) * eased)
-      setWaveD(buildPath(nums))
+      const nextD = buildPath(nums)
+      waveDRef.current = nextD
+      setWaveD(nextD)
+
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(step)
       } else {
-        setAnimating(false)
+        rafRef.current = null
+        setWaveAnimating(false)
+        // mode switch is handled by UI; keep in sync here too
         setMode(toMode)
+        fromModeRef.current = toMode
       }
     }
+
     rafRef.current = requestAnimationFrame(step)
   }
+
 
   useEffect(() => () => rafRef.current && cancelAnimationFrame(rafRef.current), [])
 
@@ -171,9 +193,10 @@ export default function AuthPage() {
         <div style={{
           position: 'absolute', top: 0, right: 0,
           width: '52%', height: '100%', zIndex: 3,
-          transition: 'transform 1.1s cubic-bezier(0.86,0,0.07,1)',
+          transition: 'transform 1.05s cubic-bezier(0.86,0,0.07,1)',
           transform: isRegister ? 'translateX(-92%)' : 'translateX(0)'
         }}>
+
           <svg viewBox="0 0 420 460" preserveAspectRatio="none"
             xmlns="http://www.w3.org/2000/svg"
             style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}>
