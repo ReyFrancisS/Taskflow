@@ -8,7 +8,8 @@ export default function AuthPage() {
   const rafRef = useRef(null)
 
   const waveDRef = useRef('M60,0 Q20,115 50,230 Q80,345 60,460 L420,460 L420,0 Z')
-  const [waveD, setWaveD] = useState(waveDRef.current)
+  const [waveD, setWaveD] = useState('M60,0 Q20,115 50,230 Q80,345 60,460 L420,460 L420,0 Z')
+
 
   const targetModeRef = useRef('login')
   const fromModeRef = useRef('login')
