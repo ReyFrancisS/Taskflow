@@ -72,6 +72,11 @@ export default function KanbanBoard() {
 
   // Drag handlers
   function onDragStart(e, task) {
+    // Only allow drag if assigned to current user or user is owner
+    if (task.assigned_to !== user?.id && project?.owner_id !== user?.id) {
+      e.preventDefault()
+      return
+    }
     setDragging(task)
     e.dataTransfer.effectAllowed = 'move'
   }
@@ -195,7 +200,7 @@ export default function KanbanBoard() {
                   )}
                   {colTasks.map(task => (
                     <div key={task.id}
-                      draggable
+                      draggable={task.assigned_to === user?.id || project?.owner_id === user?.id}
                       onDragStart={e => onDragStart(e, task)}
                       onDragEnd={onDragEnd}
                       style={{
@@ -204,7 +209,8 @@ export default function KanbanBoard() {
                         boxShadow: dragging?.id === task.id
                           ? '0 8px 24px rgba(26,35,126,0.15)'
                           : '0 2px 8px rgba(26,35,126,0.07)',
-                        cursor: 'grab', opacity: dragging?.id === task.id ? 0.7 : 1,
+                        cursor: task.assigned_to === user?.id || project?.owner_id === user?.id ? 'grab' : 'default',
+                        opacity: dragging?.id === task.id ? 0.7 : 1,
                         borderLeft: `3px solid ${colors.border}`,
                         transition: 'all 0.15s'
                       }}>
