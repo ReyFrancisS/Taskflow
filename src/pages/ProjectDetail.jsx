@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
@@ -19,7 +19,25 @@ export default function ProjectDetail() {
   const [searchMsg, setSearchMsg] = useState('')
   const [activeTab, setActiveTab] = useState('overview')
 
-  const isOwner = project?.owner_id === user?.id
+  const memberList = useMemo(() => {
+    if (!project) return members
+
+    const ownerId = project.owner_id
+    const ownerProfile = project.profiles
+    const otherMembers = members.filter(m => m.profiles?.id !== ownerId)
+
+    if (!ownerProfile) return members
+
+    return [
+      { id: `owner-${ownerId}`, user_id: ownerId, profiles: ownerProfile },
+      ...otherMembers
+    ]
+  }, [project, members])
+
+  const isOwner = useMemo(() => {
+    if (!project || !user) return false
+    return project.owner_id === user.id
+  }, [project, user])
 
   useEffect(() => { fetchAll() }, [id])
 
@@ -28,7 +46,7 @@ export default function ProjectDetail() {
 
     const { data: proj } = await supabase
       .from('projects')
-      .select('*, profiles:owner_id(name)')
+      .select('*, profiles:owner_id(id,name,email)')
       .eq('id', id)
       .single()
     setProject(proj)
@@ -65,6 +83,7 @@ export default function ProjectDetail() {
       .eq('email', searchEmail.trim())
       .single()
     if (!data) return setSearchMsg('No user found with that email.')
+    if (project && data.id === project.owner_id) return setSearchMsg('Owner is already a member.')
     const alreadyMember = members.some(m => m.profiles?.id === data.id)
     if (alreadyMember) return setSearchMsg('User is already a member.')
     setSearchResult(data)
@@ -100,7 +119,6 @@ export default function ProjectDetail() {
   const totalTasks = tasks.length
   const completedTasks = tasks.filter(t => t.status === 'Done').length
   const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
-
   const tabs = ['overview', 'members', 'activity']
 
   if (loading) return (
@@ -145,6 +163,16 @@ export default function ProjectDetail() {
             }}>
               <i className="ti ti-layout-kanban" /> Kanban
             </button>
+            {isOwner && (
+              <button onClick={() => { setActiveTab('members'); setShowAddMember(true); }} style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                background: '#1a237e', color: '#fff', border: 'none',
+                borderRadius: '8px', padding: '8px 14px', cursor: 'pointer',
+                fontFamily: "'Poppins',sans-serif", fontSize: '12px', fontWeight: 600
+              }}>
+                <i className="ti ti-user-plus" /> Add Member
+              </button>
+            )}
             {isOwner && (
               <button onClick={deleteProject} style={{
                 background: '#fff', color: '#c62828', border: '1.5px solid #c62828',
@@ -207,7 +235,7 @@ export default function ProjectDetail() {
         {activeTab === 'members' && (
           <div style={{ background: '#fff', borderRadius: '14px', padding: '1.5rem', boxShadow: '0 2px 12px rgba(26,35,126,0.07)', maxWidth: '500px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#1a237e', margin: 0 }}>Members ({members.length})</h3>
+              <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#1a237e', margin: 0 }}>Members ({memberList.length})</h3>
               {isOwner && (
                 <button onClick={() => setShowAddMember(p => !p)} style={{
                   display: 'flex', alignItems: 'center', gap: '5px',
@@ -246,7 +274,7 @@ export default function ProjectDetail() {
               </div>
             )}
 
-            {members.map(m => (
+            {memberList.map(m => (
               <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f0f2ff' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div style={{
