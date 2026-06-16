@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useDarkMode } from '../context/DarkModeContext'
 import Sidebar from '../components/Sidebar'
+import Topbar from '../components/Topbar'
 
 export default function Dashboard() {
   const { user, profile } = useAuth()
@@ -67,11 +68,20 @@ export default function Dashboard() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: darkMode ? '#0f1117' : '#f0f2ff', fontFamily: "'Poppins', sans-serif" }}>
       <Sidebar />
-      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem', background: darkMode ? '#0f1117' : '#f0f2ff' }}>
-        <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: darkMode ? '#e8eaf6' : '#1a237e', margin: 0 }}>
-            Welcome back, {profile?.name?.split(' ')[0] || 'there'} 👋
-          </h1>
+      <Topbar title={`Welcome back, ${profile?.name?.split(' ')[0] || 'there'} 👋`}
+        actions={
+          <button onClick={() => navigate('/projects/create')} style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            background: '#1a237e', color: '#fff', border: 'none',
+            borderRadius: '8px', padding: '8px 16px', cursor: 'pointer',
+            fontFamily: "'Poppins', sans-serif", fontSize: '12px', fontWeight: 600
+          }}>
+            <i className="ti ti-plus" /> Create Project
+          </button>
+        }
+      />
+      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem', paddingTop: '80px', background: darkMode ? '#0f1117' : '#f0f2ff' }}>
+        <div style={{ marginBottom: '2rem', marginTop: '20px' }}>
           <p style={{ color: '#888', fontSize: '13px', margin: '4px 0 0' }}>
             Here's what's happening with your projects.
           </p>
