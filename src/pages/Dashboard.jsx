@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../context/useAuth'
-
+import { useAuth } from '../context/AuthContext'
 import Sidebar from '../components/Sidebar'
 
 export default function Dashboard() {
@@ -12,11 +11,10 @@ export default function Dashboard() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    if (!user) return
     setLoading(true)
 
-
-    // Fetch projects user is a member of
     const { data: memberRows } = await supabase
       .from('project_members')
       .select('project_id')
@@ -27,11 +25,10 @@ export default function Dashboard() {
     if (projectIds.length > 0) {
       const { data: projectData } = await supabase
         .from('projects')
-        .select('*, profiles:owner_id(name)')
+        .select('*')
         .in('id', projectIds)
       setProjects(projectData || [])
 
-      // Fetch tasks assigned to user
       const { data: taskData } = await supabase
         .from('tasks')
         .select('status')
@@ -46,23 +43,17 @@ export default function Dashboard() {
         completed,
         pending: assigned - completed
       })
+    } else {
+      setProjects([])
+      setStats({ projects: 0, assigned: 0, completed: 0, pending: 0 })
     }
 
     setLoading(false)
-  }
+  }, [user?.id])
 
   useEffect(() => {
-    if (!user) return
-
-    // Defer to next tick to avoid lint warning about setState inside effect body
-    setTimeout(() => {
-      fetchData()
-    }, 0)
-  }, [user, fetchData])
-
-
-
-
+    fetchData()
+  }, [fetchData])
 
   const statCards = [
     { label: 'Projects', value: stats.projects, icon: 'ti-folder', color: '#3949ab' },
@@ -75,8 +66,6 @@ export default function Dashboard() {
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f0f2ff', fontFamily: "'Poppins', sans-serif" }}>
       <Sidebar />
       <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem' }}>
-
-        {/* Header */}
         <div style={{ marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a237e', margin: 0 }}>
             Welcome back, {profile?.name?.split(' ')[0] || 'there'} 👋
@@ -86,7 +75,6 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Stat Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
           {statCards.map(card => (
             <div key={card.label} style={{
@@ -108,7 +96,6 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Projects Section */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#1a237e', margin: 0 }}>My Projects</h2>
           <button onClick={() => navigate('/projects/create')} style={{
@@ -158,10 +145,10 @@ export default function Dashboard() {
                     background: '#e8eaf6', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '10px', color: '#1a237e', fontWeight: 600
                   }}>
-                    {project.profiles?.name?.charAt(0).toUpperCase() || '?'}
+                    {project.name?.charAt(0).toUpperCase() || '?'}
                   </div>
-                  <span style={{ fontSize: '11px', color: '#aaa' }}>{project.profiles?.name || 'Unknown'}</span>
-                  {project.owner_id === user.id && (
+                  <span style={{ fontSize: '11px', color: '#aaa' }}>{project.name || 'Unknown'}</span>
+                  {project.owner_id === user?.id && (
                     <span style={{
                       marginLeft: 'auto', fontSize: '10px', background: '#e8eaf6',
                       color: '#1a237e', padding: '2px 8px', borderRadius: '20px', fontWeight: 600
