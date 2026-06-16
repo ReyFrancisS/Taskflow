@@ -34,11 +34,10 @@ export default function ProjectDetail() {
     ]
   }, [project, members])
 
-  const isOwner = true
-//   useMemo(() => {
-//     if (!project || !user) return false
-//     return project.owner_id === user.id
-//   }, [project, user])
+  const isOwner = useMemo(() => {
+    if (!project || !user) return false
+    return project.owner_id === user.id
+  }, [project, user])
 
   useEffect(() => { fetchAll() }, [id])
 
