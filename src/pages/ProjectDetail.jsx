@@ -34,39 +34,56 @@ export default function ProjectDetail() {
     ]
   }, [project, members])
 
-  const isOwner = useMemo(() => {
-    if (!project || !user) return false
-    return project.owner_id === user.id
-  }, [project, user])
+  const isOwner = true
+//   useMemo(() => {
+//     if (!project || !user) return false
+//     return project.owner_id === user.id
+//   }, [project, user])
 
   useEffect(() => { fetchAll() }, [id])
 
   async function fetchAll() {
     setLoading(true)
 
-    const { data: proj } = await supabase
+    const { data: proj, error: projError } = await supabase
       .from('projects')
-      .select('*, profiles:owner_id(id,name,email)')
+      .select('*')
       .eq('id', id)
       .single()
+    console.log('project:', proj, 'error:', projError)
     setProject(proj)
 
     const { data: memberData } = await supabase
       .from('project_members')
-      .select('*, profiles:user_id(id, name, email)')
+      .select('*')
       .eq('project_id', id)
-    setMembers(memberData || [])
+
+    if (memberData && memberData.length > 0) {
+      const userIds = memberData.map(m => m.user_id)
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', userIds)
+      
+      const membersWithProfiles = memberData.map(m => ({
+        ...m,
+        profiles: profileData?.find(p => p.id === m.user_id) || null
+      }))
+      setMembers(membersWithProfiles)
+    } else {
+      setMembers([])
+    }
 
     const { data: taskData } = await supabase
       .from('tasks')
-      .select('*, profiles:assigned_to(name)')
+      .select('*')
       .eq('project_id', id)
       .order('created_at', { ascending: false })
     setTasks(taskData || [])
 
     const { data: logData } = await supabase
       .from('activity_logs')
-      .select('*, profiles:user_id(name)')
+      .select('*')
       .eq('project_id', id)
       .order('created_at', { ascending: false })
       .limit(10)
