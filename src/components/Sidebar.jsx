@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { useDarkMode } from '../context/DarkModeContext'
 
 const navItems = [
   { icon: 'ti-layout-dashboard', label: 'Dashboard', path: '/dashboard' },
@@ -14,6 +15,7 @@ export default function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const { profile, signOut, user } = useAuth()
+  const { darkMode, setDarkMode } = useDarkMode()
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
@@ -116,6 +118,7 @@ export default function Sidebar() {
             <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', margin: 0 }}>{profile?.email || ''}</p>
           </div>
         </div>
+
         <div onClick={handleSignOut}
           style={{
             display: 'flex', alignItems: 'center', gap: '8px',

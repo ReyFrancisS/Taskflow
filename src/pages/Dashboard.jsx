@@ -2,10 +2,12 @@ import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { useDarkMode } from '../context/DarkModeContext'
 import Sidebar from '../components/Sidebar'
 
 export default function Dashboard() {
   const { user, profile } = useAuth()
+  const { darkMode } = useDarkMode()
   const navigate = useNavigate()
   const [stats, setStats] = useState({ projects: 0, assigned: 0, completed: 0, pending: 0 })
   const [projects, setProjects] = useState([])
@@ -63,11 +65,11 @@ export default function Dashboard() {
   ]
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f0f2ff', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: darkMode ? '#0f1117' : '#f0f2ff', fontFamily: "'Poppins', sans-serif" }}>
       <Sidebar />
-      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem' }}>
+      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem', background: darkMode ? '#0f1117' : '#f0f2ff' }}>
         <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a237e', margin: 0 }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: darkMode ? '#e8eaf6' : '#1a237e', margin: 0 }}>
             Welcome back, {profile?.name?.split(' ')[0] || 'there'} 👋
           </h1>
           <p style={{ color: '#888', fontSize: '13px', margin: '4px 0 0' }}>
