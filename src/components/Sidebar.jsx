@@ -1,5 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../context/useAuth'
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 
 const navItems = [
   { icon: 'ti-layout-dashboard', label: 'Dashboard', path: '/dashboard' },
@@ -11,7 +13,34 @@ const navItems = [
 export default function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { profile, signOut } = useAuth()
+  const { profile, signOut, user } = useAuth()
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    if (!user) return
+    fetchUnread()
+
+    const channel = supabase
+      .channel('notifications')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`
+      }, () => fetchUnread())
+      .subscribe()
+
+    return () => supabase.removeChannel(channel)
+  }, [user])
+
+  async function fetchUnread() {
+    const { count } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_read', false)
+    setUnreadCount(count || 0)
+  }
 
   async function handleSignOut() {
     await signOut()
@@ -59,6 +88,13 @@ export default function Sidebar() {
               <span style={{ color: active ? '#fff' : 'rgba(255,255,255,0.65)', fontSize: '13px', fontWeight: active ? 600 : 400 }}>
                 {item.label}
               </span>
+              {item.path === '/notifications' && unreadCount > 0 && (
+                <span style={{
+                  marginLeft: 'auto', background: '#e53935', color: '#fff',
+                  fontSize: '10px', fontWeight: 700, padding: '1px 6px',
+                  borderRadius: '20px', minWidth: '18px', textAlign: 'center'
+                }}>{unreadCount}</span>
+              )}
             </div>
           )
         })}
