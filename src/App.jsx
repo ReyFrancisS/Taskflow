@@ -5,6 +5,7 @@ import CreateProject from './pages/CreateProject'
 import ProjectDetail from './pages/ProjectDetail'
 import CreateTask from './pages/CreateTask'
 import MyTasks from './pages/MyTasks'
+import KanbanBoard from './pages/KanbanBoard'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
       <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
       <Route path="/projects/:id/tasks/create" element={<ProtectedRoute><CreateTask /></ProtectedRoute>} />
       <Route path="/tasks" element={<ProtectedRoute><MyTasks /></ProtectedRoute>} />
+            <Route path="/projects/:id/kanban" element={<ProtectedRoute><KanbanBoard /></ProtectedRoute>} />
     </Routes>
   )
 }

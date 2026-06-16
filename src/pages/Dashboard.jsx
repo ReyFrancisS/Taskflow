@@ -155,7 +155,7 @@ export default function Dashboard() {
                     }}>Owner</span>
                   )}
                 </div>
-              </div>
+              </div>  
             ))}
           </div>
         )}
