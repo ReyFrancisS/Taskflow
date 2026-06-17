@@ -2,11 +2,13 @@ import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { useDarkMode } from '../context/DarkModeContext'
 import Sidebar from '../components/Sidebar'
 
 export default function ProjectDetail() {
   const { id } = useParams()
   const { user } = useAuth()
+  const { darkMode } = useDarkMode()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
   const [members, setMembers] = useState([])
@@ -136,28 +138,37 @@ export default function ProjectDetail() {
   const completedTasks = tasks.filter(t => t.status === 'Done').length
   const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
   const tabs = ['overview', 'members', 'activity']
+  const pageBg = darkMode ? '#1F1F1E' : '#f0f2ff'
+  const surfaceBg = darkMode ? '#2a2a28' : '#fff'
+  const cardShadow = darkMode ? '0 2px 12px rgba(0,0,0,0.25)' : '0 2px 12px rgba(26,35,126,0.07)'
+  const borderColor = darkMode ? '#333' : '#f0f2ff'
+  const textPrimary = darkMode ? '#e8eaf6' : '#1a237e'
+  const textSecondary = darkMode ? '#aaa' : '#999'
+  const inputBg = darkMode ? '#1a1a19' : '#fff'
+  const inputBorder = darkMode ? '#444' : '#e0e0e0'
+  const inputColor = darkMode ? '#e8eaf6' : '#333'
 
   if (loading) return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f0f2ff', fontFamily: "'Poppins',sans-serif" }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: pageBg, fontFamily: "'Poppins',sans-serif" }}>
       <Sidebar />
-      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem', color: '#1a237e', fontSize: '14px' }}>Loading...</main>
+      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem', color: textPrimary, fontSize: '14px' }}>Loading...</main>
     </div>
   )
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f0f2ff', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: pageBg, fontFamily: "'Poppins',sans-serif", color: textPrimary }}>
       <Sidebar />
-      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem' }}>
+      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem', background: pageBg }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button onClick={() => navigate('/dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1a237e', fontSize: '20px' }}>
+            <button onClick={() => navigate('/dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: darkMode ? '#e8eaf6' : '#1a237e', fontSize: '20px' }}>
               <i className="ti ti-arrow-left" />
             </button>
             <div>
-              <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a237e', margin: 0 }}>{project?.name}</h1>
-              <p style={{ color: '#999', fontSize: '12px', margin: '3px 0 0' }}>
+              <h1 style={{ fontSize: '22px', fontWeight: 700, color: darkMode ? '#e8eaf6' : '#1a237e', margin: 0 }}>{project?.name}</h1>
+              <p style={{ color: darkMode ? '#aaa' : '#999', fontSize: '12px', margin: '3px 0 0' }}>
                 Owner: {project?.profiles?.name} · {project?.start_date} → {project?.end_date}
               </p>
             </div>
@@ -173,7 +184,7 @@ export default function ProjectDetail() {
             </button>
             <button onClick={() => navigate(`/projects/${id}/kanban`)} style={{
               display: 'flex', alignItems: 'center', gap: '6px',
-              background: '#fff', color: '#1a237e', border: '1.5px solid #1a237e',
+              background: darkMode ? '#171717' : '#fff', color: darkMode ? '#e8eaf6' : '#1a237e', border: `1.5px solid ${darkMode ? '#333' : '#1a237e'}` ,
               borderRadius: '8px', padding: '8px 14px', cursor: 'pointer',
               fontFamily: "'Poppins',sans-serif", fontSize: '12px', fontWeight: 600
             }}>
@@ -191,7 +202,7 @@ export default function ProjectDetail() {
             )}
             {isOwner && (
               <button onClick={deleteProject} style={{
-                background: '#fff', color: '#c62828', border: '1.5px solid #c62828',
+                background: darkMode ? '#1a1a19' : '#fff', color: '#c62828', border: `1.5px solid ${darkMode ? '#333' : '#c62828'}`,
                 borderRadius: '8px', padding: '8px 12px', cursor: 'pointer', fontSize: '14px'
               }}>
                 <i className="ti ti-trash" />
@@ -201,31 +212,31 @@ export default function ProjectDetail() {
         </div>
 
         {/* Progress Bar */}
-        <div style={{ background: '#fff', borderRadius: '14px', padding: '1.4rem 1.5rem', marginBottom: '1.5rem', boxShadow: '0 2px 12px rgba(26,35,126,0.07)' }}>
+        <div style={{ background: darkMode ? '#2a2a28' : '#fff', borderRadius: '14px', padding: '1.4rem 1.5rem', marginBottom: '1.5rem', boxShadow: darkMode ? '0 2px 12px rgba(0,0,0,0.25)' : '0 2px 12px rgba(26,35,126,0.07)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#1a237e' }}>Project Progress</span>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#1a237e' }}>{progress}%</span>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: darkMode ? '#e8eaf6' : '#1a237e' }}>Project Progress</span>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: darkMode ? '#e8eaf6' : '#1a237e' }}>{progress}%</span>
           </div>
-          <div style={{ background: '#e8eaf6', borderRadius: '999px', height: '10px', overflow: 'hidden' }}>
+          <div style={{ background: darkMode ? '#232323' : '#e8eaf6', borderRadius: '999px', height: '10px', overflow: 'hidden' }}>
             <div style={{
               height: '100%', borderRadius: '999px',
               background: 'linear-gradient(90deg, #3949ab, #1a237e)',
               width: `${progress}%`, transition: 'width 0.6s ease'
             }} />
           </div>
-          <p style={{ fontSize: '11px', color: '#aaa', marginTop: '6px' }}>
+          <p style={{ fontSize: '11px', color: darkMode ? '#aaa' : '#aaa', marginTop: '6px' }}>
             {completedTasks} of {totalTasks} tasks completed
           </p>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', background: '#fff', borderRadius: '10px', padding: '4px', width: 'fit-content', boxShadow: '0 2px 8px rgba(26,35,126,0.06)' }}>
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', background: surfaceBg, borderRadius: '10px', padding: '4px', width: 'fit-content', boxShadow: cardShadow }}>
           {tabs.map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} style={{
               padding: '7px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer',
               fontFamily: "'Poppins',sans-serif", fontSize: '12px', fontWeight: 600,
               background: activeTab === tab ? '#1a237e' : 'transparent',
-              color: activeTab === tab ? '#fff' : '#888',
+              color: activeTab === tab ? '#fff' : textSecondary,
               textTransform: 'capitalize', transition: 'all 0.2s'
             }}>
               {tab}
@@ -237,25 +248,25 @@ export default function ProjectDetail() {
         {activeTab === 'overview' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px,1fr))', gap: '1rem' }}>
             {tasks.length === 0 ? (
-              <div style={{ background: '#fff', borderRadius: '14px', padding: '2rem', textAlign: 'center', boxShadow: '0 2px 12px rgba(26,35,126,0.07)', gridColumn: '1/-1' }}>
+              <div style={{ background: surfaceBg, borderRadius: '14px', padding: '2rem', textAlign: 'center', boxShadow: cardShadow, gridColumn: '1/-1' }}>
                 <i className="ti ti-clipboard-off" style={{ fontSize: '36px', color: '#c5cae9' }} />
-                <p style={{ color: '#aaa', fontSize: '13px', marginTop: '10px' }}>No tasks yet. Create your first task!</p>
+                <p style={{ color: textSecondary, fontSize: '13px', marginTop: '10px' }}>No tasks yet. Create your first task!</p>
               </div>
             ) : tasks.map(task => (
-              <TaskCard key={task.id} task={task} />
+              <TaskCard key={task.id} task={task} darkMode={darkMode} />
             ))}
           </div>
         )}
 
         {/* MEMBERS TAB */}
         {activeTab === 'members' && (
-          <div style={{ background: '#fff', borderRadius: '14px', padding: '1.5rem', boxShadow: '0 2px 12px rgba(26,35,126,0.07)', maxWidth: '500px' }}>
+          <div style={{ background: surfaceBg, borderRadius: '14px', padding: '1.5rem', boxShadow: cardShadow, maxWidth: '500px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#1a237e', margin: 0 }}>Members ({memberList.length})</h3>
+              <h3 style={{ fontSize: '14px', fontWeight: 600, color: textPrimary, margin: 0 }}>Members ({memberList.length})</h3>
               {isOwner && (
                 <button onClick={() => setShowAddMember(p => !p)} style={{
                   display: 'flex', alignItems: 'center', gap: '5px',
-                  background: '#e8eaf6', color: '#1a237e', border: 'none',
+                  background: darkMode ? '#3a3a38' : '#e8eaf6', color: darkMode ? '#e8eaf6' : '#1a237e', border: 'none',
                   borderRadius: '8px', padding: '6px 12px', cursor: 'pointer',
                   fontFamily: "'Poppins',sans-serif", fontSize: '12px', fontWeight: 600
                 }}>
@@ -265,11 +276,11 @@ export default function ProjectDetail() {
             </div>
 
             {showAddMember && isOwner && (
-              <div style={{ background: '#f0f2ff', borderRadius: '10px', padding: '1rem', marginBottom: '1rem' }}>
+              <div style={{ background: darkMode ? '#262626' : '#f0f2ff', borderRadius: '10px', padding: '1rem', marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input type="email" placeholder="Enter user email..."
                     value={searchEmail} onChange={e => setSearchEmail(e.target.value)}
-                    style={{ ...inputStyle, flex: 1 }} />
+                    style={{ ...inputStyle, ...{ background: inputBg, border: `1.5px solid ${inputBorder}`, color: inputColor }, flex: 1 }} />
                   <button onClick={searchUser} style={{
                     background: '#1a237e', color: '#fff', border: 'none',
                     borderRadius: '8px', padding: '8px 14px', cursor: 'pointer',
@@ -278,8 +289,8 @@ export default function ProjectDetail() {
                 </div>
                 {searchMsg && <p style={{ color: '#c62828', fontSize: '11px', marginTop: '6px' }}>{searchMsg}</p>}
                 {searchResult && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', background: '#fff', borderRadius: '8px', padding: '8px 12px' }}>
-                    <span style={{ fontSize: '13px', color: '#333' }}>{searchResult.name} — {searchResult.email}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', background: surfaceBg, borderRadius: '8px', padding: '8px 12px', boxShadow: cardShadow }}>
+                    <span style={{ fontSize: '13px', color: textPrimary }}>{searchResult.name} — {searchResult.email}</span>
                     <button onClick={addMember} style={{
                       background: '#1a237e', color: '#fff', border: 'none',
                       borderRadius: '6px', padding: '5px 12px', cursor: 'pointer',
@@ -291,18 +302,18 @@ export default function ProjectDetail() {
             )}
 
             {memberList.map(m => (
-              <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f0f2ff' }}>
+              <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: `1px solid ${borderColor}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div style={{
                     width: '34px', height: '34px', borderRadius: '50%',
-                    background: '#e8eaf6', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '13px', fontWeight: 600, color: '#1a237e'
+                    background: darkMode ? '#3a3a38' : '#e8eaf6', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '13px', fontWeight: 600, color: darkMode ? '#e8eaf6' : '#1a237e'
                   }}>
                     {m.profiles?.name?.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p style={{ fontSize: '13px', fontWeight: 600, color: '#333', margin: 0 }}>{m.profiles?.name}</p>
-                    <p style={{ fontSize: '11px', color: '#aaa', margin: 0 }}>{m.profiles?.email}</p>
+                    <p style={{ fontSize: '13px', fontWeight: 600, color: textPrimary, margin: 0 }}>{m.profiles?.name}</p>
+                    <p style={{ fontSize: '11px', color: textSecondary, margin: 0 }}>{m.profiles?.email}</p>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -324,24 +335,24 @@ export default function ProjectDetail() {
 
         {/* ACTIVITY TAB */}
         {activeTab === 'activity' && (
-          <div style={{ background: '#fff', borderRadius: '14px', padding: '1.5rem', boxShadow: '0 2px 12px rgba(26,35,126,0.07)', maxWidth: '500px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#1a237e', margin: '0 0 1.2rem' }}>Activity Log</h3>
+          <div style={{ background: surfaceBg, borderRadius: '14px', padding: '1.5rem', boxShadow: cardShadow, maxWidth: '500px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 600, color: textPrimary, margin: '0 0 1.2rem' }}>Activity Log</h3>
             {logs.length === 0 ? (
-              <p style={{ color: '#aaa', fontSize: '13px' }}>No activity yet.</p>
+              <p style={{ color: textSecondary, fontSize: '13px' }}>No activity yet.</p>
             ) : logs.map(log => (
-              <div key={log.id} style={{ display: 'flex', gap: '10px', padding: '10px 0', borderBottom: '1px solid #f0f2ff' }}>
+              <div key={log.id} style={{ display: 'flex', gap: '10px', padding: '10px 0', borderBottom: `1px solid ${borderColor}` }}>
                 <div style={{
-                  width: '30px', height: '30px', borderRadius: '50%', background: '#e8eaf6',
+                  width: '30px', height: '30px', borderRadius: '50%', background: darkMode ? '#3a3a38' : '#e8eaf6',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '12px', fontWeight: 600, color: '#1a237e', flexShrink: 0
+                  fontSize: '12px', fontWeight: 600, color: darkMode ? '#e8eaf6' : '#1a237e', flexShrink: 0
                 }}>
                   {log.profiles?.name?.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p style={{ fontSize: '12px', color: '#333', margin: 0 }}>
+                  <p style={{ fontSize: '12px', color: textPrimary, margin: 0 }}>
                     <strong>{log.profiles?.name}</strong> {log.action}
                   </p>
-                  <p style={{ fontSize: '10px', color: '#aaa', margin: '2px 0 0' }}>
+                  <p style={{ fontSize: '10px', color: textSecondary, margin: '2px 0 0' }}>
                     {new Date(log.created_at).toLocaleString()}
                   </p>
                 </div>
@@ -354,7 +365,7 @@ export default function ProjectDetail() {
   )
 }
 
-function TaskCard({ task }) {
+function TaskCard({ task, darkMode }) {
   const statusColors = {
     'To Do': '#757575', 'In Progress': '#1565c0',
     'Review': '#e65100', 'Done': '#2e7d32'
@@ -363,8 +374,8 @@ function TaskCard({ task }) {
 
   return (
     <div style={{
-      background: '#fff', borderRadius: '12px', padding: '1.2rem',
-      boxShadow: '0 2px 10px rgba(26,35,126,0.07)',
+      background: darkMode ? '#2a2a28' : '#fff', borderRadius: '12px', padding: '1.2rem',
+      boxShadow: darkMode ? '0 2px 10px rgba(0,0,0,0.25)' : '0 2px 10px rgba(26,35,126,0.07)',
       borderTop: `3px solid ${statusColors[task.status] || '#ccc'}`
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
@@ -374,7 +385,7 @@ function TaskCard({ task }) {
           background: priorityColors[task.priority] + '18', color: priorityColors[task.priority]
         }}>{task.priority}</span>
       </div>
-      <p style={{ fontSize: '11px', color: '#999', margin: '0 0 10px', lineHeight: 1.5 }}>
+      <p style={{ fontSize: '11px', color: darkMode ? '#aaa' : '#999', margin: '0 0 10px', lineHeight: 1.5 }}>
         {task.description || 'No description'}
       </p>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -382,12 +393,12 @@ function TaskCard({ task }) {
           fontSize: '10px', padding: '3px 10px', borderRadius: '20px', fontWeight: 600,
           background: statusColors[task.status] + '18', color: statusColors[task.status]
         }}>{task.status}</span>
-        <span style={{ fontSize: '11px', color: '#aaa' }}>
+        <span style={{ fontSize: '11px', color: darkMode ? '#aaa' : '#aaa' }}>
           {task.profiles?.name || 'Unassigned'}
         </span>
       </div>
       {task.due_date && (
-        <p style={{ fontSize: '10px', color: '#aaa', margin: '8px 0 0' }}>
+        <p style={{ fontSize: '10px', color: darkMode ? '#aaa' : '#aaa', margin: '8px 0 0' }}>
           <i className="ti ti-calendar" /> Due: {task.due_date}
         </p>
       )}
