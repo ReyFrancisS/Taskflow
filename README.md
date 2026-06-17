@@ -1,16 +1,59 @@
-# React + Vite
+# TaskFlow
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A collaborative project management web app that helps teams stay organized, assign work clearly, and track progress in real time.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+TaskFlow lets a team leader create a project, invite members, and assign tasks to the right people. Everyone can see what's in progress, what's pending, and what's done — through a Kanban-style board that updates as work moves forward.
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Authentication** — Secure login and registration with protected routes
+- **Project Management** — Create projects and invite members to collaborate
+- **Task Assignment** — Create tasks and assign them to specific team members
+- **Kanban Board** — Visual task tracking with status columns (To Do / In Progress / Review / Done)
+- **My Tasks** — Personal view of all tasks assigned to you
+- **Notifications** — Stay updated on project and task activity
+- **Dark Mode** — Toggle between light and dark themes
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+| Layer | Technology |
+|---|---|
+| Frontend | React 18 + Vite |
+| Routing | React Router v6 |
+| Styling | Tailwind CSS |
+| Backend / Database | Supabase (PostgreSQL) |
+| Auth | Supabase Auth |
+| Deployment | Vercel |
+
+## Live Projects
+
+| Name | Description | Live Demo |
+|---|---|---|
+| TaskFlow | A collaborative project management tool where team leaders create projects, assign tasks to members, and track progress through a Kanban-style board. | [**Live Demo →**](https://taskflow-nine-mu.vercel.app/) |
+
+## Getting Started
+
+```bash
+# Clone the repository
+git clone https://github.com/ReyFrancisS/Taskflow.git
+cd taskflow
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+# Add your Supabase URL and anon key to .env
+
+# Run the development server
+npm run dev
+```
+
+### Environment Variables
+
+```env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
