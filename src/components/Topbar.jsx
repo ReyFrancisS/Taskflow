@@ -7,8 +7,8 @@ export default function Topbar({ title, actions }) {
     <div style={{
       position: 'fixed', top: 0, left: '220px', right: 0,
       height: '60px', zIndex: 100,
-      background: darkMode ? '#1a1d27' : '#fff',
-      borderBottom: `1px solid ${darkMode ? '#2a2d3e' : '#e8eaf6'}`,
+      background: darkMode ? '#1a1a19' : '#fff',
+      borderBottom: `1px solid ${darkMode ? '#3a3a38' : '#e8eaf6'}`,
       display: 'flex', alignItems: 'center',
       justifyContent: 'space-between',
       padding: '0 2rem',

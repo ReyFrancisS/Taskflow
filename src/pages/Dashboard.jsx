@@ -66,7 +66,7 @@ export default function Dashboard() {
   ]
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: darkMode ? '#0f1117' : '#f0f2ff', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: darkMode ? '#1F1F1E' : '#f0f2ff', fontFamily: "'Poppins', sans-serif" }}>
       <Sidebar />
       <Topbar title={`Welcome back, ${profile?.name?.split(' ')[0] || 'there'} 👋`}
         actions={
@@ -80,7 +80,7 @@ export default function Dashboard() {
           </button>
         }
       />
-      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem', paddingTop: '80px', background: darkMode ? '#0f1117' : '#f0f2ff' }}>
+      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem', paddingTop: '80px', background: darkMode ? '#1F1F1E' : '#f0f2ff' }}>
         <div style={{ marginBottom: '2rem', marginTop: '20px' }}>
           <p style={{ color: '#888', fontSize: '13px', margin: '4px 0 0' }}>
             Here's what's happening with your projects.
@@ -90,9 +90,9 @@ export default function Dashboard() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
           {statCards.map(card => (
             <div key={card.label} style={{
-              background: '#fff', borderRadius: '14px',
+              background: darkMode ? '#2a2a28' : '#fff', borderRadius: '14px',
               padding: '1.4rem 1.5rem',
-              boxShadow: '0 2px 12px rgba(26,35,126,0.07)',
+              boxShadow: darkMode ? '0 2px 12px rgba(0,0,0,0.25)' : '0 2px 12px rgba(26,35,126,0.07)',
               display: 'flex', flexDirection: 'column', gap: '8px'
             }}>
               <div style={{
@@ -136,8 +136,8 @@ export default function Dashboard() {
               <div key={project.id}
                 onClick={() => navigate(`/projects/${project.id}`)}
                 style={{
-                  background: '#fff', borderRadius: '14px', padding: '1.4rem 1.5rem',
-                  boxShadow: '0 2px 12px rgba(26,35,126,0.07)', cursor: 'pointer',
+                  background: darkMode ? '#2a2a28' : '#fff', borderRadius: '14px', padding: '1.4rem 1.5rem',
+                  boxShadow: darkMode ? '0 2px 12px rgba(0,0,0,0.25)' : '0 2px 12px rgba(26,35,126,0.07)', cursor: 'pointer',
                   transition: 'transform 0.2s, box-shadow 0.2s',
                   borderLeft: '4px solid #1a237e'
                 }}
