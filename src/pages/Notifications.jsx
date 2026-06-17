@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { useDarkMode } from '../context/DarkModeContext'
 import Sidebar from '../components/Sidebar'
+import Topbar from '../components/Topbar'
 
 export default function Notifications() {
   const { user } = useAuth()
+  const { darkMode } = useDarkMode()
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -42,9 +45,10 @@ export default function Notifications() {
   const unreadCount = notifications.filter(n => !n.is_read).length
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f0f2ff', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: darkMode ? '#1F1F1E' : '#f0f2ff', fontFamily: "'Poppins', sans-serif" }}>
       <Sidebar />
-      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem' }}>
+      <Topbar title="Notifications" />
+      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem', paddingTop: '80px', background: darkMode ? '#1F1F1E' : '#f0f2ff' }}>
         <div style={{ maxWidth: '600px' }}>
 
           {/* Header */}
@@ -79,8 +83,8 @@ export default function Notifications() {
             <p style={{ color: '#aaa', fontSize: '13px' }}>Loading...</p>
           ) : notifications.length === 0 ? (
             <div style={{
-              background: '#fff', borderRadius: '14px', padding: '3rem',
-              textAlign: 'center', boxShadow: '0 2px 12px rgba(26,35,126,0.07)'
+              background: darkMode ? '#2a2a28' : '#fff', borderRadius: '14px', padding: '3rem',
+              textAlign: 'center', boxShadow: darkMode ? '0 2px 12px rgba(0,0,0,0.25)' : '0 2px 12px rgba(26,35,126,0.07)'
             }}>
               <i className="ti ti-bell-off" style={{ fontSize: '40px', color: '#c5cae9' }} />
               <p style={{ color: '#aaa', fontSize: '13px', marginTop: '12px' }}>No notifications yet.</p>
@@ -89,22 +93,22 @@ export default function Notifications() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {notifications.map(notif => (
                 <div key={notif.id} style={{
-                  background: '#fff', borderRadius: '12px',
+                  background: darkMode ? '#2a2a28' : '#fff', borderRadius: '12px',
                   padding: '1rem 1.2rem',
-                  boxShadow: '0 2px 8px rgba(26,35,126,0.07)',
-                  borderLeft: `4px solid ${notif.is_read ? '#e0e0e0' : '#1a237e'}`,
+                  boxShadow: darkMode ? '0 2px 12px rgba(0,0,0,0.25)' : '0 2px 8px rgba(26,35,126,0.07)',
+                  borderLeft: `4px solid ${notif.is_read ? (darkMode ? '#444' : '#e0e0e0') : '#1a237e'}`,
                   display: 'flex', alignItems: 'flex-start',
                   justifyContent: 'space-between', gap: '12px'
                 }}>
                   <div style={{ display: 'flex', gap: '12px', flex: 1 }}>
                     <div style={{
                       width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
-                      background: notif.is_read ? '#f5f5f5' : '#e8eaf6',
+                      background: notif.is_read ? (darkMode ? '#444' : '#f5f5f5') : '#e8eaf6',
                       display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
                       <i className="ti ti-bell" style={{
                         fontSize: '16px',
-                        color: notif.is_read ? '#aaa' : '#1a237e'
+                        color: notif.is_read ? (darkMode ? '#999' : '#aaa') : '#1a237e'
                       }} />
                     </div>
                     <div style={{ flex: 1 }}>
@@ -122,9 +126,9 @@ export default function Notifications() {
                   <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                     {!notif.is_read && (
                       <button onClick={() => markAsRead(notif.id)} style={{
-                        background: '#e8eaf6', border: 'none', borderRadius: '6px',
+                        background: darkMode ? '#1a237e' : '#e8eaf6', border: 'none', borderRadius: '6px',
                         padding: '5px 10px', cursor: 'pointer', fontSize: '11px',
-                        color: '#1a237e', fontWeight: 600,
+                        color: darkMode ? '#fff' : '#1a237e', fontWeight: 600,
                         fontFamily: "'Poppins',sans-serif"
                       }}>Read</button>
                     )}

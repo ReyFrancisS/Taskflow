@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { useDarkMode } from '../context/DarkModeContext'
 import Sidebar from '../components/Sidebar'
+import Topbar from '../components/Topbar'
 
 const STATUSES = ['To Do', 'In Progress', 'Review', 'Done']
 
 export default function MyTasks() {
   const { user } = useAuth()
+  const { darkMode } = useDarkMode()
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -40,9 +43,10 @@ export default function MyTasks() {
   const priorityColors = { Low: '#43a047', Medium: '#fb8c00', High: '#e53935' }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f0f2ff', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: darkMode ? '#1F1F1E' : '#f0f2ff', fontFamily: "'Poppins', sans-serif" }}>
       <Sidebar />
-      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem' }}>
+      <Topbar title="My Tasks" />
+      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem', paddingTop: '80px', background: darkMode ? '#1F1F1E' : '#f0f2ff' }}>
         <div style={{ marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a237e', margin: 0 }}>My Tasks</h1>
           <p style={{ color: '#888', fontSize: '13px', margin: '4px 0 0' }}>All tasks assigned to you.</p>
@@ -51,7 +55,7 @@ export default function MyTasks() {
         {loading ? (
           <p style={{ color: '#aaa', fontSize: '13px' }}>Loading tasks...</p>
         ) : tasks.length === 0 ? (
-          <div style={{ background: '#fff', borderRadius: '14px', padding: '3rem', textAlign: 'center', boxShadow: '0 2px 12px rgba(26,35,126,0.07)' }}>
+          <div style={{ background: darkMode ? '#2a2a28' : '#fff', borderRadius: '14px', padding: '3rem', textAlign: 'center', boxShadow: darkMode ? '0 2px 12px rgba(0,0,0,0.25)' : '0 2px 12px rgba(26,35,126,0.07)' }}>
             <i className="ti ti-clipboard-off" style={{ fontSize: '40px', color: '#c5cae9' }} />
             <p style={{ color: '#aaa', fontSize: '13px', marginTop: '12px' }}>No tasks assigned to you yet.</p>
           </div>
@@ -59,8 +63,8 @@ export default function MyTasks() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: '1rem' }}>
             {tasks.map(task => (
               <div key={task.id} style={{
-                background: '#fff', borderRadius: '12px', padding: '1.2rem',
-                boxShadow: '0 2px 10px rgba(26,35,126,0.07)',
+                background: darkMode ? '#2a2a28' : '#fff', borderRadius: '12px', padding: '1.2rem',
+                boxShadow: darkMode ? '0 2px 12px rgba(0,0,0,0.25)' : '0 2px 10px rgba(26,35,126,0.07)',
                 borderTop: `3px solid ${statusColors[task.status] || '#ccc'}`
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
@@ -87,7 +91,7 @@ export default function MyTasks() {
                       border: `1.5px solid ${statusColors[task.status]}`,
                       borderRadius: '6px', fontFamily: "'Poppins',sans-serif",
                       fontSize: '12px', color: statusColors[task.status],
-                      fontWeight: 600, outline: 'none', background: '#fff', cursor: 'pointer'
+                      fontWeight: 600, outline: 'none', background: darkMode ? '#1F1F1E' : '#fff', cursor: 'pointer'
                     }}>
                     {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>

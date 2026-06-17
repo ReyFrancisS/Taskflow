@@ -2,10 +2,13 @@ import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { useDarkMode } from '../context/DarkModeContext'
 import Sidebar from '../components/Sidebar'
+import Topbar from '../components/Topbar'
 
 export default function Projects() {
   const { user } = useAuth()
+  const { darkMode } = useDarkMode()
   const navigate = useNavigate()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
@@ -38,9 +41,10 @@ export default function Projects() {
   useEffect(() => { fetchProjects() }, [fetchProjects])
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f0f2ff', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: darkMode ? '#1F1F1E' : '#f0f2ff', fontFamily: "'Poppins', sans-serif" }}>
       <Sidebar />
-      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem' }}>
+      <Topbar title="Projects" />
+      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem', paddingTop: '80px', background: darkMode ? '#1F1F1E' : '#f0f2ff' }}>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <div>
@@ -61,8 +65,8 @@ export default function Projects() {
           <p style={{ color: '#aaa', fontSize: '13px' }}>Loading projects...</p>
         ) : projects.length === 0 ? (
           <div style={{
-            background: '#fff', borderRadius: '14px', padding: '3rem',
-            textAlign: 'center', boxShadow: '0 2px 12px rgba(26,35,126,0.07)'
+            background: darkMode ? '#2a2a28' : '#fff', borderRadius: '14px', padding: '3rem',
+            textAlign: 'center', boxShadow: darkMode ? '0 2px 12px rgba(0,0,0,0.25)' : '0 2px 12px rgba(26,35,126,0.07)'
           }}>
             <i className="ti ti-folder-off" style={{ fontSize: '40px', color: '#c5cae9' }} />
             <p style={{ color: '#aaa', fontSize: '13px', marginTop: '12px' }}>No projects yet. Create your first project!</p>
@@ -73,13 +77,13 @@ export default function Projects() {
               <div key={project.id}
                 onClick={() => navigate(`/projects/${project.id}`)}
                 style={{
-                  background: '#fff', borderRadius: '14px', padding: '1.4rem 1.5rem',
-                  boxShadow: '0 2px 12px rgba(26,35,126,0.07)', cursor: 'pointer',
+                  background: darkMode ? '#2a2a28' : '#fff', borderRadius: '14px', padding: '1.4rem 1.5rem',
+                  boxShadow: darkMode ? '0 2px 12px rgba(0,0,0,0.25)' : '0 2px 12px rgba(26,35,126,0.07)', cursor: 'pointer',
                   borderLeft: '4px solid #1a237e',
                   transition: 'transform 0.2s, box-shadow 0.2s'
                 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(26,35,126,0.13)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(26,35,126,0.07)' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = darkMode ? '0 6px 20px rgba(0,0,0,0.35)' : '0 6px 20px rgba(26,35,126,0.13)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = darkMode ? '0 2px 12px rgba(0,0,0,0.25)' : '0 2px 12px rgba(26,35,126,0.07)' }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#1a237e', margin: '0 0 6px' }}>{project.name}</h3>
