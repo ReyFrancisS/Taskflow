@@ -21,15 +21,33 @@ export default function ProjectDetail() {
   const [searchMsg, setSearchMsg] = useState('')
   const [activeTab, setActiveTab] = useState('overview')
 
+  const dm = darkMode
+
+  // Design tokens
+  const pageBg = dm
+    ? 'radial-gradient(ellipse at 20% 0%, #0f1629 0%, #0a0c16 40%, #06080f 100%)'
+    : '#f0f2f8'
+  const surfaceBg = dm ? 'linear-gradient(145deg, #141828, #0d1020)' : '#ffffff'
+  const cardShadow = dm
+    ? '8px 8px 24px rgba(0,0,0,0.5), -2px -2px 8px rgba(255,255,255,0.03)'
+    : '8px 8px 20px rgba(26,35,126,0.08), -4px -4px 12px rgba(255,255,255,0.9)'
+  const textPrimary = dm ? '#e8ecff' : '#1a237e'
+  const textSecondary = dm ? '#6b7db3' : '#8892b0'
+  const accentBlue = dm ? '#4f6ef7' : '#1a237e'
+  const borderGlow = dm ? '1px solid rgba(79,110,247,0.12)' : '1px solid rgba(26,35,126,0.07)'
+  const inputBg = dm ? 'linear-gradient(145deg, #0a0c16, #0f1220)' : '#ffffff'
+  const inputBorder = dm ? 'rgba(79,110,247,0.2)' : 'rgba(26,35,126,0.15)'
+  const inputShadow = dm
+    ? 'inset 4px 4px 10px rgba(0,0,0,0.4), inset -2px -2px 6px rgba(255,255,255,0.02)'
+    : 'inset 4px 4px 10px rgba(26,35,126,0.06), inset -2px -2px 6px rgba(255,255,255,0.9)'
+  const dividerColor = dm ? 'rgba(255,255,255,0.05)' : 'rgba(26,35,126,0.06)'
+
   const memberList = useMemo(() => {
     if (!project) return members
-
     const ownerId = project.owner_id
     const ownerProfile = project.profiles
     const otherMembers = members.filter(m => m.profiles?.id !== ownerId)
-
     if (!ownerProfile) return members
-
     return [
       { id: `owner-${ownerId}`, user_id: ownerId, profiles: ownerProfile },
       ...otherMembers
@@ -46,26 +64,17 @@ export default function ProjectDetail() {
   async function fetchAll() {
     setLoading(true)
 
-    const { data: proj, error: projError } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', id)
-      .single()
-    console.log('project:', proj, 'error:', projError)
+    const { data: proj } = await supabase
+      .from('projects').select('*').eq('id', id).single()
     setProject(proj)
 
     const { data: memberData } = await supabase
-      .from('project_members')
-      .select('*')
-      .eq('project_id', id)
+      .from('project_members').select('*').eq('project_id', id)
 
     if (memberData && memberData.length > 0) {
       const userIds = memberData.map(m => m.user_id)
       const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('id', userIds)
-      
+        .from('profiles').select('*').in('id', userIds)
       const membersWithProfiles = memberData.map(m => ({
         ...m,
         profiles: profileData?.find(p => p.id === m.user_id) || null
@@ -76,18 +85,12 @@ export default function ProjectDetail() {
     }
 
     const { data: taskData } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('project_id', id)
-      .order('created_at', { ascending: false })
+      .from('tasks').select('*').eq('project_id', id).order('created_at', { ascending: false })
     setTasks(taskData || [])
 
     const { data: logData } = await supabase
-      .from('activity_logs')
-      .select('*')
-      .eq('project_id', id)
-      .order('created_at', { ascending: false })
-      .limit(10)
+      .from('activity_logs').select('*').eq('project_id', id)
+      .order('created_at', { ascending: false }).limit(10)
     setLogs(logData || [])
 
     setLoading(false)
@@ -95,11 +98,7 @@ export default function ProjectDetail() {
 
   async function searchUser() {
     setSearchMsg(''); setSearchResult(null)
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('email', searchEmail.trim())
-      .single()
+    const { data } = await supabase.from('profiles').select('*').eq('email', searchEmail.trim()).single()
     if (!data) return setSearchMsg('No user found with that email.')
     if (project && data.id === project.owner_id) return setSearchMsg('Owner is already a member.')
     const alreadyMember = members.some(m => m.profiles?.id === data.id)
@@ -119,8 +118,7 @@ export default function ProjectDetail() {
   }
 
   async function removeMember(memberId, memberName) {
-    await supabase.from('project_members')
-      .delete().eq('project_id', id).eq('user_id', memberId)
+    await supabase.from('project_members').delete().eq('project_id', id).eq('user_id', memberId)
     await supabase.from('activity_logs').insert({
       project_id: id, user_id: user.id,
       action: `removed ${memberName} from the project`
@@ -129,81 +127,111 @@ export default function ProjectDetail() {
   }
 
   async function deleteProject() {
-    if (!confirm('Are you sure you want to delete this project?')) return
+    if (!confirm('Delete this project? This cannot be undone.')) return
     await supabase.from('projects').delete().eq('id', id)
     navigate('/dashboard')
   }
 
   const totalTasks = tasks.length
   const completedTasks = tasks.filter(t => t.status === 'Done').length
+  const inProgressTasks = tasks.filter(t => t.status === 'In Progress').length
+  const reviewTasks = tasks.filter(t => t.status === 'Review').length
   const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+
   const tabs = ['overview', 'members', 'activity']
-  const pageBg = darkMode ? '#1F1F1E' : '#f0f2ff'
-  const surfaceBg = darkMode ? '#2a2a28' : '#fff'
-  const cardShadow = darkMode ? '0 2px 12px rgba(0,0,0,0.25)' : '0 2px 12px rgba(26,35,126,0.07)'
-  const borderColor = darkMode ? '#333' : '#f0f2ff'
-  const textPrimary = darkMode ? '#e8eaf6' : '#1a237e'
-  const textSecondary = darkMode ? '#aaa' : '#999'
-  const inputBg = darkMode ? '#1a1a19' : '#fff'
-  const inputBorder = darkMode ? '#444' : '#e0e0e0'
-  const inputColor = darkMode ? '#e8eaf6' : '#333'
+
+  const btnPrimary = {
+    background: dm
+      ? 'linear-gradient(135deg, #4f6ef7, #3451d1)'
+      : 'linear-gradient(135deg, #1a237e, #283593)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '10px',
+    padding: '9px 16px',
+    cursor: 'pointer',
+    fontFamily: "'Poppins', sans-serif",
+    fontSize: '12px',
+    fontWeight: 700,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    boxShadow: dm
+      ? '0 4px 16px rgba(79,110,247,0.35)'
+      : '0 4px 12px rgba(26,35,126,0.25)'
+  }
+
+  const btnOutline = {
+    background: dm ? 'linear-gradient(145deg, #141828, #0d1020)' : '#ffffff',
+    color: dm ? '#e8ecff' : '#1a237e',
+    border: dm ? '1px solid rgba(79,110,247,0.25)' : '1px solid rgba(26,35,126,0.2)',
+    borderRadius: '10px',
+    padding: '9px 16px',
+    cursor: 'pointer',
+    fontFamily: "'Poppins', sans-serif",
+    fontSize: '12px',
+    fontWeight: 700,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    boxShadow: dm ? cardShadow : cardShadow
+  }
 
   if (loading) return (
     <div style={{ display: 'flex', minHeight: '100vh', background: pageBg, fontFamily: "'Poppins',sans-serif" }}>
       <Sidebar />
-      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem', color: textPrimary, fontSize: '14px' }}>Loading...</main>
+      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem', color: textPrimary, fontSize: '14px' }}>
+        Loading...
+      </main>
     </div>
   )
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: pageBg, fontFamily: "'Poppins',sans-serif", color: textPrimary }}>
       <Sidebar />
-      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem', background: pageBg }}>
+      <main style={{ marginLeft: '220px', flex: 1, padding: '2rem 2.5rem' }}>
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button onClick={() => navigate('/dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: darkMode ? '#e8eaf6' : '#1a237e', fontSize: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.8rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <button onClick={() => navigate('/dashboard')} style={{
+              width: '36px', height: '36px', borderRadius: '10px',
+              background: dm ? 'linear-gradient(145deg, #141828, #0d1020)' : '#ffffff',
+              border: borderGlow,
+              boxShadow: dm ? cardShadow : cardShadow,
+              cursor: 'pointer',
+              color: textPrimary,
+              fontSize: '16px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
               <i className="ti ti-arrow-left" />
             </button>
             <div>
-              <h1 style={{ fontSize: '22px', fontWeight: 700, color: darkMode ? '#e8eaf6' : '#1a237e', margin: 0 }}>{project?.name}</h1>
-              <p style={{ color: darkMode ? '#aaa' : '#999', fontSize: '12px', margin: '3px 0 0' }}>
-                Owner: {project?.profiles?.name} · {project?.start_date} → {project?.end_date}
+              <h1 style={{ fontSize: '22px', fontWeight: 800, color: textPrimary, margin: 0, letterSpacing: '-0.4px' }}>
+                {project?.name}
+              </h1>
+              <p style={{ color: textSecondary, fontSize: '12px', margin: '3px 0 0' }}>
+                {project?.start_date} → {project?.end_date || 'No end date'}
               </p>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button onClick={() => navigate(`/projects/${id}/tasks/create`)} style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              background: '#1a237e', color: '#fff', border: 'none',
-              borderRadius: '8px', padding: '8px 14px', cursor: 'pointer',
-              fontFamily: "'Poppins',sans-serif", fontSize: '12px', fontWeight: 600
-            }}>
+
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            <button onClick={() => navigate(`/projects/${id}/tasks/create`)} style={btnPrimary}>
               <i className="ti ti-plus" /> New Task
             </button>
-            <button onClick={() => navigate(`/projects/${id}/kanban`)} style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              background: darkMode ? '#171717' : '#fff', color: darkMode ? '#e8eaf6' : '#1a237e', border: `1.5px solid ${darkMode ? '#333' : '#1a237e'}` ,
-              borderRadius: '8px', padding: '8px 14px', cursor: 'pointer',
-              fontFamily: "'Poppins',sans-serif", fontSize: '12px', fontWeight: 600
-            }}>
+            <button onClick={() => navigate(`/projects/${id}/kanban`)} style={btnOutline}>
               <i className="ti ti-layout-kanban" /> Kanban
             </button>
             {isOwner && (
-              <button onClick={() => { setActiveTab('members'); setShowAddMember(true); }} style={{
-                display: 'flex', alignItems: 'center', gap: '6px',
-                background: '#1a237e', color: '#fff', border: 'none',
-                borderRadius: '8px', padding: '8px 14px', cursor: 'pointer',
-                fontFamily: "'Poppins',sans-serif", fontSize: '12px', fontWeight: 600
-              }}>
+              <button onClick={() => { setActiveTab('members'); setShowAddMember(true) }} style={btnPrimary}>
                 <i className="ti ti-user-plus" /> Add Member
               </button>
             )}
             {isOwner && (
               <button onClick={deleteProject} style={{
-                background: darkMode ? '#1a1a19' : '#fff', color: '#c62828', border: `1.5px solid ${darkMode ? '#333' : '#c62828'}`,
-                borderRadius: '8px', padding: '8px 12px', cursor: 'pointer', fontSize: '14px'
+                ...btnOutline,
+                color: '#e53935',
+                border: dm ? '1px solid rgba(229,57,53,0.3)' : '1px solid rgba(229,57,53,0.4)'
               }}>
                 <i className="ti ti-trash" />
               </button>
@@ -211,33 +239,103 @@ export default function ProjectDetail() {
           </div>
         </div>
 
+        {/* Stats Row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.8rem' }}>
+          {[
+            { label: 'Total', value: totalTasks, color: dm ? '#4f6ef7' : '#1a237e', icon: 'ti-clipboard-list' },
+            { label: 'In Progress', value: inProgressTasks, color: dm ? '#60a5fa' : '#1565c0', icon: 'ti-loader' },
+            { label: 'In Review', value: reviewTasks, color: dm ? '#fb923c' : '#e65100', icon: 'ti-eye' },
+            { label: 'Completed', value: completedTasks, color: dm ? '#34d399' : '#2e7d32', icon: 'ti-circle-check' },
+          ].map(stat => (
+            <div key={stat.label} style={{
+              background: surfaceBg,
+              borderRadius: '14px',
+              padding: '1rem 1.2rem',
+              border: borderGlow,
+              boxShadow: cardShadow,
+              display: 'flex', alignItems: 'center', gap: '12px'
+            }}>
+              <div style={{
+                width: '38px', height: '38px', borderRadius: '10px',
+                background: stat.color + (dm ? '20' : '12'),
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '17px', color: stat.color,
+                boxShadow: dm
+                  ? 'inset 2px 2px 5px rgba(0,0,0,0.3)'
+                  : 'inset 2px 2px 5px rgba(0,0,0,0.04)'
+              }}>
+                <i className={`ti ${stat.icon}`} />
+              </div>
+              <div>
+                <p style={{ fontSize: '20px', fontWeight: 800, color: textPrimary, margin: 0, lineHeight: 1 }}>{stat.value}</p>
+                <p style={{ fontSize: '11px', color: textSecondary, margin: '2px 0 0', fontWeight: 500 }}>{stat.label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
         {/* Progress Bar */}
-        <div style={{ background: darkMode ? '#2a2a28' : '#fff', borderRadius: '14px', padding: '1.4rem 1.5rem', marginBottom: '1.5rem', boxShadow: darkMode ? '0 2px 12px rgba(0,0,0,0.25)' : '0 2px 12px rgba(26,35,126,0.07)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: darkMode ? '#e8eaf6' : '#1a237e' }}>Project Progress</span>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: darkMode ? '#e8eaf6' : '#1a237e' }}>{progress}%</span>
+        <div style={{
+          background: surfaceBg, borderRadius: '16px',
+          padding: '1.4rem 1.6rem', marginBottom: '1.8rem',
+          boxShadow: cardShadow, border: borderGlow
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: textPrimary }}>Project Progress</span>
+            <span style={{
+              fontSize: '13px', fontWeight: 800,
+              color: progress === 100
+                ? (dm ? '#34d399' : '#2e7d32')
+                : (dm ? '#4f6ef7' : '#1a237e')
+            }}>
+              {progress}%
+            </span>
           </div>
-          <div style={{ background: darkMode ? '#232323' : '#e8eaf6', borderRadius: '999px', height: '10px', overflow: 'hidden' }}>
+          <div style={{
+            background: dm ? 'rgba(0,0,0,0.4)' : 'rgba(26,35,126,0.06)',
+            borderRadius: '999px', height: '10px', overflow: 'hidden',
+            boxShadow: dm
+              ? 'inset 3px 3px 8px rgba(0,0,0,0.5)'
+              : 'inset 3px 3px 8px rgba(26,35,126,0.08)'
+          }}>
             <div style={{
               height: '100%', borderRadius: '999px',
-              background: 'linear-gradient(90deg, #3949ab, #1a237e)',
-              width: `${progress}%`, transition: 'width 0.6s ease'
+              background: progress === 100
+                ? (dm ? 'linear-gradient(90deg, #059669, #34d399)' : 'linear-gradient(90deg, #2e7d32, #43a047)')
+                : (dm ? 'linear-gradient(90deg, #3451d1, #4f6ef7, #6b8eff)' : 'linear-gradient(90deg, #1a237e, #3949ab)'),
+              width: `${progress}%`,
+              transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: dm
+                ? `0 0 12px ${progress === 100 ? 'rgba(52,211,153,0.5)' : 'rgba(79,110,247,0.5)'}`
+                : 'none'
             }} />
           </div>
-          <p style={{ fontSize: '11px', color: darkMode ? '#aaa' : '#aaa', marginTop: '6px' }}>
+          <p style={{ fontSize: '11px', color: textSecondary, marginTop: '8px' }}>
             {completedTasks} of {totalTasks} tasks completed
           </p>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', background: surfaceBg, borderRadius: '10px', padding: '4px', width: 'fit-content', boxShadow: cardShadow }}>
+        <div style={{
+          display: 'flex', gap: '4px', marginBottom: '1.8rem',
+          background: surfaceBg,
+          borderRadius: '12px', padding: '5px',
+          width: 'fit-content',
+          boxShadow: cardShadow, border: borderGlow
+        }}>
           {tabs.map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} style={{
-              padding: '7px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer',
-              fontFamily: "'Poppins',sans-serif", fontSize: '12px', fontWeight: 600,
-              background: activeTab === tab ? '#1a237e' : 'transparent',
+              padding: '8px 22px', border: 'none', borderRadius: '9px', cursor: 'pointer',
+              fontFamily: "'Poppins',sans-serif", fontSize: '12px', fontWeight: 700,
+              background: activeTab === tab
+                ? dm ? 'linear-gradient(135deg, #4f6ef7, #3451d1)' : 'linear-gradient(135deg, #1a237e, #283593)'
+                : 'transparent',
               color: activeTab === tab ? '#fff' : textSecondary,
-              textTransform: 'capitalize', transition: 'all 0.2s'
+              textTransform: 'capitalize',
+              transition: 'all 0.2s',
+              boxShadow: activeTab === tab
+                ? (dm ? '0 4px 12px rgba(79,110,247,0.35)' : '0 4px 10px rgba(26,35,126,0.25)')
+                : 'none'
             }}>
               {tab}
             </button>
@@ -246,68 +344,108 @@ export default function ProjectDetail() {
 
         {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px,1fr))', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: '1rem' }}>
             {tasks.length === 0 ? (
-              <div style={{ background: surfaceBg, borderRadius: '14px', padding: '2rem', textAlign: 'center', boxShadow: cardShadow, gridColumn: '1/-1' }}>
-                <i className="ti ti-clipboard-off" style={{ fontSize: '36px', color: '#c5cae9' }} />
-                <p style={{ color: textSecondary, fontSize: '13px', marginTop: '10px' }}>No tasks yet. Create your first task!</p>
+              <div style={{
+                background: surfaceBg, borderRadius: '16px', padding: '2.5rem',
+                textAlign: 'center', boxShadow: cardShadow, border: borderGlow, gridColumn: '1/-1'
+              }}>
+                <i className="ti ti-clipboard-off" style={{ fontSize: '36px', color: dm ? '#4f6ef7' : '#c5cae9' }} />
+                <p style={{ color: textSecondary, fontSize: '13px', marginTop: '10px' }}>
+                  No tasks yet. Add your first task to get started!
+                </p>
               </div>
             ) : tasks.map(task => (
-              <TaskCard key={task.id} task={task} darkMode={darkMode} />
+              <TaskCard key={task.id} task={task} darkMode={dm}
+                surfaceBg={surfaceBg} cardShadow={cardShadow}
+                textPrimary={textPrimary} textSecondary={textSecondary} borderGlow={borderGlow} />
             ))}
           </div>
         )}
 
         {/* MEMBERS TAB */}
         {activeTab === 'members' && (
-          <div style={{ background: surfaceBg, borderRadius: '14px', padding: '1.5rem', boxShadow: cardShadow, maxWidth: '500px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 600, color: textPrimary, margin: 0 }}>Members ({memberList.length})</h3>
+          <div style={{
+            background: surfaceBg, borderRadius: '18px',
+            padding: '1.6rem', boxShadow: cardShadow,
+            border: borderGlow, maxWidth: '520px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.4rem' }}>
+              <h3 style={{ fontSize: '14px', fontWeight: 700, color: textPrimary, margin: 0 }}>
+                Team Members <span style={{
+                  fontSize: '11px', background: dm ? 'rgba(79,110,247,0.15)' : '#e8eaf6',
+                  color: dm ? '#4f6ef7' : '#1a237e', padding: '2px 8px',
+                  borderRadius: '20px', marginLeft: '6px'
+                }}>{memberList.length}</span>
+              </h3>
               {isOwner && (
                 <button onClick={() => setShowAddMember(p => !p)} style={{
-                  display: 'flex', alignItems: 'center', gap: '5px',
-                  background: darkMode ? '#3a3a38' : '#e8eaf6', color: darkMode ? '#e8eaf6' : '#1a237e', border: 'none',
-                  borderRadius: '8px', padding: '6px 12px', cursor: 'pointer',
-                  fontFamily: "'Poppins',sans-serif", fontSize: '12px', fontWeight: 600
+                  ...btnPrimary, padding: '7px 14px'
                 }}>
-                  <i className="ti ti-user-plus" /> Add Member
+                  <i className="ti ti-user-plus" /> Add
                 </button>
               )}
             </div>
 
             {showAddMember && isOwner && (
-              <div style={{ background: darkMode ? '#262626' : '#f0f2ff', borderRadius: '10px', padding: '1rem', marginBottom: '1rem' }}>
+              <div style={{
+                background: dm ? 'rgba(0,0,0,0.3)' : '#f0f2f8',
+                borderRadius: '12px', padding: '1rem', marginBottom: '1.2rem',
+                border: borderGlow,
+                boxShadow: dm
+                  ? 'inset 4px 4px 10px rgba(0,0,0,0.3)'
+                  : 'inset 4px 4px 10px rgba(26,35,126,0.05)'
+              }}>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <input type="email" placeholder="Enter user email..."
-                    value={searchEmail} onChange={e => setSearchEmail(e.target.value)}
-                    style={{ ...inputStyle, ...{ background: inputBg, border: `1.5px solid ${inputBorder}`, color: inputColor }, flex: 1 }} />
-                  <button onClick={searchUser} style={{
-                    background: '#1a237e', color: '#fff', border: 'none',
-                    borderRadius: '8px', padding: '8px 14px', cursor: 'pointer',
-                    fontFamily: "'Poppins',sans-serif", fontSize: '12px', fontWeight: 600
-                  }}>Search</button>
+                  <input
+                    type="email"
+                    placeholder="Enter user email..."
+                    value={searchEmail}
+                    onChange={e => setSearchEmail(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && searchUser()}
+                    style={{
+                      flex: 1, padding: '9px 12px',
+                      background: inputBg, border: `1.5px solid ${inputBorder}`,
+                      boxShadow: inputShadow,
+                      borderRadius: '9px',
+                      fontFamily: "'Poppins', sans-serif",
+                      fontSize: '12px', color: textPrimary, outline: 'none'
+                    }}
+                  />
+                  <button onClick={searchUser} style={{ ...btnPrimary, padding: '9px 14px' }}>
+                    Search
+                  </button>
                 </div>
-                {searchMsg && <p style={{ color: '#c62828', fontSize: '11px', marginTop: '6px' }}>{searchMsg}</p>}
+                {searchMsg && <p style={{ color: '#e53935', fontSize: '11px', marginTop: '6px' }}>{searchMsg}</p>}
                 {searchResult && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', background: surfaceBg, borderRadius: '8px', padding: '8px 12px', boxShadow: cardShadow }}>
-                    <span style={{ fontSize: '13px', color: textPrimary }}>{searchResult.name} — {searchResult.email}</span>
-                    <button onClick={addMember} style={{
-                      background: '#1a237e', color: '#fff', border: 'none',
-                      borderRadius: '6px', padding: '5px 12px', cursor: 'pointer',
-                      fontFamily: "'Poppins',sans-serif", fontSize: '11px', fontWeight: 600
-                    }}>Add</button>
+                  <div style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    marginTop: '8px', background: surfaceBg, borderRadius: '10px',
+                    padding: '10px 12px', boxShadow: cardShadow, border: borderGlow
+                  }}>
+                    <span style={{ fontSize: '13px', color: textPrimary }}>{searchResult.name} · {searchResult.email}</span>
+                    <button onClick={addMember} style={{ ...btnPrimary, padding: '6px 12px' }}>Add</button>
                   </div>
                 )}
               </div>
             )}
 
             {memberList.map(m => (
-              <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: `1px solid ${borderColor}` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div key={m.id} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '12px 0', borderBottom: `1px solid ${dividerColor}`
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{
-                    width: '34px', height: '34px', borderRadius: '50%',
-                    background: darkMode ? '#3a3a38' : '#e8eaf6', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '13px', fontWeight: 600, color: darkMode ? '#e8eaf6' : '#1a237e'
+                    width: '36px', height: '36px', borderRadius: '50%',
+                    background: dm
+                      ? 'linear-gradient(135deg, #1e2a50, #141e3a)'
+                      : 'linear-gradient(135deg, #e8eaf6, #c5cae9)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '13px', fontWeight: 700, color: dm ? '#4f6ef7' : '#1a237e',
+                    boxShadow: dm
+                      ? 'inset 2px 2px 6px rgba(0,0,0,0.4)'
+                      : 'inset 2px 2px 6px rgba(26,35,126,0.08)'
                   }}>
                     {m.profiles?.name?.charAt(0).toUpperCase()}
                   </div>
@@ -318,11 +456,20 @@ export default function ProjectDetail() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {m.profiles?.id === project?.owner_id && (
-                    <span style={{ fontSize: '10px', background: '#e8eaf6', color: '#1a237e', padding: '2px 8px', borderRadius: '20px', fontWeight: 600 }}>Owner</span>
+                    <span style={{
+                      fontSize: '10px',
+                      background: dm ? 'rgba(240,160,75,0.15)' : '#fff8e1',
+                      color: dm ? '#f0a04b' : '#e65100',
+                      padding: '3px 9px', borderRadius: '20px', fontWeight: 700
+                    }}>Owner</span>
                   )}
                   {isOwner && m.profiles?.id !== project?.owner_id && (
                     <button onClick={() => removeMember(m.profiles.id, m.profiles.name)} style={{
-                      background: 'none', border: 'none', cursor: 'pointer', color: '#e53935', fontSize: '16px'
+                      width: '28px', height: '28px', borderRadius: '8px',
+                      background: dm ? 'rgba(229,57,53,0.1)' : '#ffebee',
+                      border: dm ? '1px solid rgba(229,57,53,0.2)' : '1px solid rgba(229,57,53,0.1)',
+                      cursor: 'pointer', color: '#e53935', fontSize: '14px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
                       <i className="ti ti-user-minus" />
                     </button>
@@ -335,24 +482,34 @@ export default function ProjectDetail() {
 
         {/* ACTIVITY TAB */}
         {activeTab === 'activity' && (
-          <div style={{ background: surfaceBg, borderRadius: '14px', padding: '1.5rem', boxShadow: cardShadow, maxWidth: '500px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 600, color: textPrimary, margin: '0 0 1.2rem' }}>Activity Log</h3>
+          <div style={{
+            background: surfaceBg, borderRadius: '18px',
+            padding: '1.6rem', boxShadow: cardShadow,
+            border: borderGlow, maxWidth: '520px'
+          }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 700, color: textPrimary, margin: '0 0 1.4rem' }}>Activity Log</h3>
             {logs.length === 0 ? (
               <p style={{ color: textSecondary, fontSize: '13px' }}>No activity yet.</p>
-            ) : logs.map(log => (
-              <div key={log.id} style={{ display: 'flex', gap: '10px', padding: '10px 0', borderBottom: `1px solid ${borderColor}` }}>
+            ) : logs.map((log, i) => (
+              <div key={log.id} style={{
+                display: 'flex', gap: '12px',
+                padding: '12px 0',
+                borderBottom: i < logs.length - 1 ? `1px solid ${dividerColor}` : 'none'
+              }}>
                 <div style={{
-                  width: '30px', height: '30px', borderRadius: '50%', background: darkMode ? '#3a3a38' : '#e8eaf6',
+                  width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0,
+                  background: dm ? 'linear-gradient(135deg, #1e2a50, #141e3a)' : 'linear-gradient(135deg, #e8eaf6, #c5cae9)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '12px', fontWeight: 600, color: darkMode ? '#e8eaf6' : '#1a237e', flexShrink: 0
+                  fontSize: '12px', fontWeight: 700, color: dm ? '#4f6ef7' : '#1a237e',
+                  boxShadow: dm ? 'inset 2px 2px 5px rgba(0,0,0,0.3)' : 'inset 2px 2px 5px rgba(26,35,126,0.06)'
                 }}>
-                  {log.profiles?.name?.charAt(0).toUpperCase()}
+                  {log.profiles?.name?.charAt(0).toUpperCase() || '?'}
                 </div>
                 <div>
-                  <p style={{ fontSize: '12px', color: textPrimary, margin: 0 }}>
+                  <p style={{ fontSize: '12px', color: textPrimary, margin: 0, lineHeight: 1.5 }}>
                     <strong>{log.profiles?.name}</strong> {log.action}
                   </p>
-                  <p style={{ fontSize: '10px', color: textSecondary, margin: '2px 0 0' }}>
+                  <p style={{ fontSize: '10px', color: textSecondary, margin: '3px 0 0' }}>
                     {new Date(log.created_at).toLocaleString()}
                   </p>
                 </div>
@@ -365,49 +522,69 @@ export default function ProjectDetail() {
   )
 }
 
-function TaskCard({ task, darkMode }) {
+function TaskCard({ task, darkMode: dm, surfaceBg, cardShadow, textPrimary, textSecondary, borderGlow }) {
+  const [hovered, setHovered] = useState(false)
+
   const statusColors = {
-    'To Do': '#757575', 'In Progress': '#1565c0',
-    'Review': '#e65100', 'Done': '#2e7d32'
+    'To Do': { text: '#9e9e9e', bg: dm ? '#1a1a1a' : '#f5f5f5' },
+    'In Progress': { text: dm ? '#60a5fa' : '#1565c0', bg: dm ? '#0f1e30' : '#e3f2fd' },
+    'Review': { text: dm ? '#fb923c' : '#e65100', bg: dm ? '#2a1500' : '#fff3e0' },
+    'Done': { text: dm ? '#34d399' : '#2e7d32', bg: dm ? '#0a1f14' : '#e8f5e9' },
   }
-  const priorityColors = { Low: '#43a047', Medium: '#fb8c00', High: '#e53935' }
+
+  const priorityColors = {
+    Low: dm ? '#34d399' : '#43a047',
+    Medium: dm ? '#fb923c' : '#fb8c00',
+    High: dm ? '#f87171' : '#e53935'
+  }
+
+  const sc = statusColors[task.status] || statusColors['To Do']
+  const pc = priorityColors[task.priority] || '#999'
 
   return (
-    <div style={{
-      background: darkMode ? '#2a2a28' : '#fff', borderRadius: '12px', padding: '1.2rem',
-      boxShadow: darkMode ? '0 2px 10px rgba(0,0,0,0.25)' : '0 2px 10px rgba(26,35,126,0.07)',
-      borderTop: `3px solid ${statusColors[task.status] || '#ccc'}`
-    }}>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: surfaceBg,
+        borderRadius: '14px',
+        padding: '1.2rem',
+        border: hovered
+          ? dm ? '1px solid rgba(79,110,247,0.25)' : '1px solid rgba(26,35,126,0.12)'
+          : borderGlow,
+        boxShadow: hovered
+          ? dm
+            ? '10px 10px 28px rgba(0,0,0,0.55), -2px -2px 10px rgba(255,255,255,0.04)'
+            : '10px 10px 24px rgba(26,35,126,0.1), -4px -4px 12px rgba(255,255,255,0.95)'
+          : cardShadow,
+        borderTop: `3px solid ${sc.text}`,
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
+        transition: 'all 0.2s ease'
+      }}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-        <h4 style={{ fontSize: '13px', fontWeight: 600, color: '#1a237e', margin: 0 }}>{task.task_name}</h4>
+        <h4 style={{ fontSize: '13px', fontWeight: 700, color: textPrimary, margin: 0, lineHeight: 1.3, flex: 1 }}>
+          {task.task_name}
+        </h4>
         <span style={{
-          fontSize: '10px', padding: '2px 8px', borderRadius: '20px', fontWeight: 600,
-          background: priorityColors[task.priority] + '18', color: priorityColors[task.priority]
+          fontSize: '10px', padding: '2px 9px', borderRadius: '20px', fontWeight: 700, marginLeft: '8px',
+          background: pc + (dm ? '20' : '18'), color: pc
         }}>{task.priority}</span>
       </div>
-      <p style={{ fontSize: '11px', color: darkMode ? '#aaa' : '#999', margin: '0 0 10px', lineHeight: 1.5 }}>
+      <p style={{ fontSize: '11px', color: textSecondary, margin: '0 0 12px', lineHeight: 1.6 }}>
         {task.description || 'No description'}
       </p>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{
-          fontSize: '10px', padding: '3px 10px', borderRadius: '20px', fontWeight: 600,
-          background: statusColors[task.status] + '18', color: statusColors[task.status]
+          fontSize: '10px', padding: '3px 10px', borderRadius: '20px', fontWeight: 700,
+          background: sc.bg, color: sc.text
         }}>{task.status}</span>
-        <span style={{ fontSize: '11px', color: darkMode ? '#aaa' : '#aaa' }}>
-          {task.profiles?.name || 'Unassigned'}
-        </span>
+        {task.due_date && (
+          <span style={{ fontSize: '10px', color: textSecondary, display: 'flex', alignItems: 'center', gap: '3px' }}>
+            <i className="ti ti-calendar" /> {task.due_date}
+          </span>
+        )}
       </div>
-      {task.due_date && (
-        <p style={{ fontSize: '10px', color: darkMode ? '#aaa' : '#aaa', margin: '8px 0 0' }}>
-          <i className="ti ti-calendar" /> Due: {task.due_date}
-        </p>
-      )}
     </div>
   )
-}
-
-const inputStyle = {
-  padding: '9px 12px', border: '1.5px solid #e0e0e0',
-  borderRadius: '8px', fontFamily: "'Poppins',sans-serif",
-  fontSize: '13px', color: '#333', outline: 'none', boxSizing: 'border-box'
 }
